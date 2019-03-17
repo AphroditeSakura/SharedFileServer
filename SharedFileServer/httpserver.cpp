@@ -13,12 +13,13 @@ private:
 	int _serv_sock;
 	ThreadPool *_tp;
 	//http任务的处理函数
-	static bool(HttpHandler)(int sock) 
+	static bool HttpHandler(int sock) 
 	{
+		LOG("into HttpHandler!!\n");
 		RequestInfo _info;
 		HttpRequest _req(sock);
 		HttpResponse _rsp(sock);
-		//接受http头部
+		//接收http头部
 		if (_req.RecvHttpHeader(_info) == false)
 		{
 			goto out;
@@ -40,6 +41,8 @@ private:
 			//如果不是CGI请求，则执行目录列表/文件下载
 			_rsp.FileHandler(_info);
 		}
+		_info._error_code = "404";
+		_rsp.ErrHandler(_info);
 		close(sock);
 		return true;
 	out:
@@ -108,6 +111,7 @@ public:
 				LOG("accept error: %s", strerror(errno));
 				continue;
 			}
+			LOG("new client!!\n");
 			//创建任务
 			HttpTask ht;
 			ht.SetHttpTask(cli_sock, HttpHandler);
@@ -125,8 +129,13 @@ class UpLoad
 	//文件上传功能处理接口
 };
 
-class Utils
-{
-	//工具类，提供公用的功能接口：比如字符串的处理
 
-};
+int main(int argc, char *argv[])
+{
+	std::string ip = argv[1];
+	int port = atoi(argv[2]);
+	HttpServer hs;
+	hs.HttpServerInit(ip, port);
+	hs.Start();
+	return 0;
+}

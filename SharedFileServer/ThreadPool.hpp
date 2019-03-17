@@ -122,8 +122,14 @@ public:
 			_cur_thr++;
 		}
 
-		pthread_mutex_init(&_mutex, NULL);
-		pthread_cond_init(&_cond, NULL);
+		if (pthread_mutex_init(&_mutex, NULL) != 0) {
+			LOG("init mutex error!\n");
+			return false;
+		}
+		if (pthread_cond_init(&_cond, NULL) != 0) {
+			LOG("init cond error!\n");
+			return false;
+		}
 		return true;
 	}
 	//线程安全的任务入队
@@ -133,6 +139,7 @@ public:
 		_task_queue.push(tt);
 		QueueUnLock();
 		ThreadWakeUpOne();
+		return true;
 	}
 
 	//线程安全的任务出队
@@ -156,7 +163,6 @@ public:
 			usleep(1000);
 		}
 		return true;
-
 	};
 
 	~ThreadPool()
