@@ -1,4 +1,5 @@
 #include "ThreadPool.hpp"
+#include "Utils.hpp"
 
 #define MAX_LISTEN 10
 #define MAX_THREAD 8
@@ -41,7 +42,7 @@ private:
 			//如果不是CGI请求，则执行目录列表/文件下载
 			_rsp.FileHandler(_info);
 		}
-		_info._error_code = "404";
+		_info._err_code = "404";
 		_rsp.ErrHandler(_info);
 		close(sock);
 		return true;
@@ -124,18 +125,21 @@ public:
 };
 
 
-class UpLoad
+int main(int argc,char* argv[])
 {
-	//文件上传功能处理接口
-};
 
-
-int main(int argc, char *argv[])
-{
+	if(argc != 3)
+		std::cout<<"Please Input "<< argv[0] <<"  Ip  Port"<<std::endl;
 	std::string ip = argv[1];
 	int port = atoi(argv[2]);
+
 	HttpServer hs;
-	hs.HttpServerInit(ip, port);
-	hs.Start();
+
+	signal(SIGPIPE,SIG_IGN);
+	if( hs.HttpServerInit(ip,port) == false)
+		return -1;
+	
+	if( hs.Start() == false)
+		return -2;
 	return 0;
 }
